@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  body {
+    min-height: 100vh;
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    background: #0b0b0d;
+    color: white;
+    font-family: system-ui, sans-serif;
+  }
+
+  .carte {
+    width: 82vw;
+    max-width: 430px;
+    padding: 22px 18px;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 26px;
+    box-shadow:
+      0 0 30px rgba(150, 60, 255, 0.4),
+      0 0 80px rgba(120, 40, 255, 0.2);
+  }
+
+  /* ---------- CHRONO ---------- */
+
+  .chrono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  #temps {
+    font-size: clamp(34px, 10vw, 56px);
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .fleche {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .fleche svg {
+    width: 16px;
+    height: 16px;
+    fill: white;
+    transition: transform 0.2s;
+  }
+
+  .fleche.ouvert svg {
+    transform: rotate(180deg);
+  }
+
+  .menu {
+    display: none;
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .menu.visible {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .preset {
+    padding: 10px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .preset:active {
+    background: rgba(150, 60, 255, 0.3);
+  }
+
+  .boutons {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .rond {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .rond:active {
+    transform: scale(0.93);
+  }
+
+  .play {
+    background: rgba(150, 60, 255, 0.28);
+    border-color: rgba(170, 100, 255, 0.55);
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+    fill: white;
+  }
+
+  /* ---------- EXERCICES ---------- */
+
+  .titre {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+
+  .mini {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.07);
+    color: white;
+    font-size: 17px;
+    cursor: pointer;
+  }
+
+  .exercice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .nom {
+    width: 46px;
+    font-weight: 700;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+
+  .cases {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .case {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+  }
+
+  .case.cochee {
+    background: #9b4dff;
+    border-color: #b47bff;
+  }
+
+  .actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .bas {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ================= CHRONO ================= -->
+
+<div class="carte">
+  <div class="chrono">
+    <div id="temps" onclick="changerDuree()">02:00</div>
+
+    <div class="fleche" id="fleche" onclick="ouvrirMenu()">
+      <svg viewBox="0 0 24 24">
+        <path d="M7 10l5 5 5-5z"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="menu" id="menu"></div>
+
+  <div class="boutons">
+    <div class="rond play" onclick="boutonPrincipal()">
+      <svg id="icone" viewBox="0 0 24 24">
+        <path d="M8 5v14l11-7z"/>
+      </svg>
+    </div>
+
+    <div class="rond" onclick="reinitialiserChrono()">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ================= EXERCICES ================= -->
+
+<div class="carte">
+  <div class="titre">
+    <span>Exercices</span>
+    <span id="compteur">1 exercice</span>
+  </div>
+
+  <div id="liste"></div>
+
+  <div class="bas">
+    <button class="mini" onclick="ajouterExercice()">+</button>
+    <button class="mini" onclick="supprimerExercice()">−</button>
+    <button class="mini" onclick="reinitialiserTout()">♻️</button>
+  </div>
+</div>
+
+<script>
+/* =========================================
+   RÉGLAGES FACILES À MODIFIER
+========================================= */
+
+const EXERCICES_INITIAUX = 4;
+const CASES_INITIALES = 4;
+
+// Durées proposées : de 30 s à 5 min, par 30 s
+const PRESETS = [
+  30, 60, 90,
+  120, 150, 180,
+  210, 240, 270,
+  300
+];
+
+/* =========================================
+   CHRONO
+========================================= */
+
+let duree = 120;
+let reste = duree;
+let timer = null;
+
+const temps = document.getElementById("temps");
+const icone = document.getElementById("icone");
+const menu = document.getElementById("menu");
+const fleche = document.getElementById("fleche");
+
+const iconePlay = `<path d="M8 5v14l11-7z"/>`;
+const iconePause = `<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>`;
+
+function afficherTemps() {
+  const m = String(Math.floor(reste / 60)).padStart(2, "0");
+  const s = String(reste % 60).padStart(2, "0");
+  temps.textContent = m + ":" + s;
+}
+
+function bip() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.value = 0.25;
+
+    osc.start();
+    setTimeout(() => osc.stop(), 600);
+  } catch (e) {}
+
+  navigator.vibrate && navigator.vibrate([400, 150, 400]);
+}
+
+function lancerChrono() {
+  clearInterval(timer);
+  reste = duree;
+  afficherTemps();
+
+  timer = setInterval(() => {
+    reste--;
+
+    if (reste <= 0) {
+      bip();
+      reste = duree;
+    }
+
+    afficherTemps();
+  }, 1000);
+
+  icone.innerHTML = iconePause;
+}
+
+function arreterChrono() {
+  clearInterval(timer);
+  timer = null;
+  icone.innerHTML = iconePlay;
+}
+
+function boutonPrincipal() {
+  timer ? arreterChrono() : lancerChrono();
+}
+
+function reinitialiserChrono() {
+  arreterChrono();
+  reste = duree;
+  afficherTemps();
+}
+
+function changerDuree() {
+  arreterChrono();
+
+  const reponse = prompt("Durée en minutes ?", duree / 60);
+
+  if (reponse === null) return;
+
+  const minutes = parseFloat(reponse.replace(",", "."));
+
+  if (!isNaN(minutes) && minutes > 0) {
+    duree = Math.max(1, Math.round(minutes * 60));
+    reste = duree;
+    afficherTemps();
+  }
+
+  icone.innerHTML = iconePlay;
+}
+
+/* Menu des durées prédéfinies */
+
+function creerMenu() {
+  menu.innerHTML = "";
+
+  PRESETS.forEach(secondes => {
+    const bouton = document.createElement("button");
+    bouton.className = "preset";
+    bouton.textContent = formatDuree(secondes);
+
+    bouton.onclick = () => {
+      arreterChrono();
+      duree = secondes;
+      reste = duree;
+      afficherTemps();
+      fermerMenu();
+    };
+
+    menu.appendChild(bouton);
+  });
+}
+
+function formatDuree(secondes) {
+  if (secondes < 60) return secondes + " s";
+
+  const minutes = secondes / 60;
+  return Number.isInteger(minutes)
+    ? minutes + " min"
+    : minutes.toFixed(1).replace(".", ",") + " min";
+}
+
+function ouvrirMenu() {
+  menu.classList.toggle("visible");
+  fleche.classList.toggle("ouvert");
+}
+
+function fermerMenu() {
+  menu.classList.remove("visible");
+  fleche.classList.remove("ouvert");
+}
+
+/* =========================================
+   EXERCICES
+========================================= */
+
+let numeroExercice = 1;
+
+const liste = document.getElementById("liste");
+const compteur = document.getElementById("compteur");
+
+function creerExercice() {
+  const div = document.createElement("div");
+  div.className = "exercice";
+
+  div.innerHTML = `
+    <div class="nom">EX${numeroExercice}</div>
+    <div class="cases"></div>
+
+    <div class="actions">
+      <button class="mini" onclick="ajouterCase(this)">+</button>
+      <button class="mini" onclick="supprimerCase(this)">−</button>
+    </div>
+  `;
+
+  numeroExercice++;
+  return div;
+}
+
+function ajouterExercice() {
+  const ex = creerExercice();
+  liste.appendChild(ex);
+
+  ajouterCase(ex.querySelector(".mini"));
+  ajouterCase(ex.querySelector(".mini"));
+
+  mettreAJourCompteur();
+}
+
+function supprimerExercice() {
+  if (liste.lastElementChild) {
+    liste.lastElementChild.remove();
+    mettreAJourCompteur();
+  }
+}
+
+function ajouterCase(bouton) {
+  const cases = bouton.closest(".exercice").querySelector(".cases");
+
+  const c = document.createElement("div");
+  c.className = "case";
+
+  c.onclick = () => {
+    c.classList.toggle("cochee");
+
+    // Chaque clic sur une case lance ou relance le chrono
+    lancerChrono();
+  };
+
+  cases.appendChild(c);
+}
+
+function supprimerCase(bouton) {
+  const cases = bouton.closest(".exercice").querySelector(".cases");
+
+  if (cases.lastElementChild) {
+    cases.lastElementChild.remove();
+  }
+}
+
+function reinitialiserTout() {
+  liste.innerHTML = "";
+  numeroExercice = 1;
+
+  for (let i = 0; i < EXERCICES_INITIAUX; i++) {
+    ajouterExercice();
+
+    const cases = liste.lastElementChild.querySelector(".cases");
+
+    while (cases.children.length > CASES_INITIALES) {
+      supprimerCase(liste.lastElementChild.querySelector(".mini"));
+    }
+
+    while (cases.children.length < CASES_INITIALES) {
+      ajouterCase(liste.lastElementChild.querySelector(".mini"));
+    }
+  }
+
+  mettreAJourCompteur();
+  reinitialiserChrono();
+}
+
+function mettreAJourCompteur() {
+  const total = liste.children.length;
+  compteur.textContent = total + (total > 1 ? " exercices" : " exercice");
+}
+
+/* =========================================
+   DÉMARRAGE
+========================================= */
+
+creerMenu();
+reinitialiserTout();
+</script>
+
+</body>
+</html>
